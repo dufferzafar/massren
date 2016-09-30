@@ -18,12 +18,33 @@ import os
 import subprocess
 import tempfile
 
-from collections import namedtuple
 
-# TODO: Move to class?
-FileAction = namedtuple('FileAction', ['kind', 'old', 'new'])
-FA_Rename = 1
-FA_Delete = 2
+class FileDelete():
+
+    def __init__(self, old):
+        self.old = old
+
+    def __repr__(self):
+        return "Delete: '%s'" % self.old
+
+    def perform(self):
+        # TODO: Handle conflicts that can occur.
+        os.remove(self.old)
+
+
+class FileRename():
+
+    def __init__(self, old, new):
+        self.old = old
+        self.new = new
+
+    def __repr__(self):
+        return "Rename: '%s' -> '%s'" % (self.old, self.new)
+
+    def perform(self):
+        # TODO: Handle conflicts that can occur.
+        os.makedirs(self.new)
+        os.rename(self.old, self.new)
 
 
 def list_matching_files(pattern):
@@ -57,7 +78,7 @@ def launch_text_editor(files):
     return files
 
 
-def get_actions_from_diff(old_files, new_files):
+def get_actions_diff(old_files, new_files):
     """
     Use difflib to generate a list of file actions.
 
@@ -72,10 +93,27 @@ def get_actions_from_diff(old_files, new_files):
     for tag, alo, ahi, blo, bhi in d.get_opcodes():
         if tag == 'replace':
             for old, new in zip(old_files[alo:ahi], new_files[blo:bhi]):
-                yield FileAction(FA_Rename, old, new)
+                yield FileRename(old, new)
         elif tag == 'delete':
             for old in old_files[alo:ahi]:
-                yield FileAction(FA_Delete, old, '')
+                yield FileDelete(old)
+
+
+def get_actions_line(old_files, new_files):
+    """
+    Perform line by line comparisons to generate a list of file actions.
+
+    * Requires both the lists to be of the same length.
+    * Deletes are represented by commenting out the files (prepending '//')
+    """
+
+    assert len(old_files) == len(new_files)
+
+    for old, new in zip(old_files, new_files):
+        if new.startswith("//"):
+            yield FileDelete(old)
+        elif old != new:
+            yield FileRename(old, new)
 
 
 if __name__ == '__main__':
@@ -85,3 +123,8 @@ if __name__ == '__main__':
 
     old_files = list_matching_files(pattern)
     new_files = launch_text_editor(old_files)
+
+    file_actions = get_actions_line(old_files, new_files)
+
+    for act in file_actions:
+        print(act)

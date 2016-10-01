@@ -18,6 +18,27 @@ import os
 import subprocess
 import tempfile
 
+HEADER = """
+Please change the filenames that need to be renamed and save the file.
+Lines that are not changed will be ignored.
+
+You may delete a file by putting "//" at the beginning of the line.
+Note that this operation cannot be undone.
+
+Do NOT swap the order of lines as this is what is used to match the original
+filenames to the new ones.
+
+Also, do NOT delete lines as the rename operation will be cancelled due to a
+mismatch between the number of filenames before and after saving the file.
+
+You may test the effect of the rename operation using the --dry-run parameter.
+
+Caveats: massren expects filenames to be reasonably sane. Filenames that
+include newlines or non-printable characters for example will probably not
+work.
+"""
+HEADER = "\n".join(["// " + line for line in HEADER.splitlines()]) + "\n\n"
+
 
 class FileDelete():
 
@@ -54,14 +75,19 @@ def list_matching_files(pattern):
     return sorted(glob.glob(pattern))
 
 
-def launch_text_editor(files):
+def launch_text_editor(files, write_header=True):
     """ Create a text file, launch editor, get new file list. """
 
     tmp_fd, tmp_file_path = tempfile.mkstemp(prefix="massren_", text=True)
 
     # Write file list
     with codecs.open(tmp_file_path, "w", "utf-8") as tmp:
+        if write_header:
+            tmp.write(HEADER)
+
         tmp.write("\n".join(files))
+
+    print("Waiting for file list to be saved... (Press Ctrl + C to abort)")
 
     # Launch editor
     subprocess.call(["subl", "-w", tmp_file_path])
@@ -70,6 +96,9 @@ def launch_text_editor(files):
     files = []
     with codecs.open(tmp_file_path, "r", "utf-8") as tmp:
         files = tmp.read().splitlines()
+
+    if write_header:
+        files = files[len(HEADER.splitlines()):]
 
     # Delete the temp file
     os.close(tmp_fd)

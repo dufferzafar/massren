@@ -14,6 +14,8 @@ Examples:
 
 import glob
 import os
+import sys
+
 import click
 
 HEADER = """
@@ -48,6 +50,7 @@ class FileDelete():
 
     def perform(self):
         # TODO: Handle conflicts that can occur.
+        # TODO: Use send2trash() instead of hard delete?
         os.remove(self.old)
 
 
@@ -75,7 +78,6 @@ class FileRename():
 def list_matching_files(pattern):
     """ Take a pattern from the CLI and list all file that match. """
 
-    # TODO: Decide whether we need to offload this to the shell
     return sorted(glob.glob(pattern))
 
 
@@ -135,7 +137,9 @@ def get_actions_line(old_files, new_files):
     * Deletes are represented by commenting out the files (prepending '//')
     """
 
-    assert len(old_files) == len(new_files)
+    if len(old_files) != len(new_files):
+        print("Number of files were changed.")
+        sys.exit(1)
 
     for old, new in zip(old_files, new_files):
         if new.startswith("//"):

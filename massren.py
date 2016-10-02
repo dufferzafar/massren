@@ -176,11 +176,13 @@ def cli(
         verbose,
         ):
 
-    # TODO: Handle the case when paths is a single directory
-
     # No path given, use current working directory
     if not paths:
         paths = list_matching_files("*")
+    # paths is a single directory, assume we need its children
+    elif len(paths) == 1:
+        if os.path.isdir(paths[0]):
+            paths = list_matching_files(os.path.join(paths[0], "*"))
 
     new_files = get_files_from_editor(paths)
 

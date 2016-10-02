@@ -79,14 +79,14 @@ def list_matching_files(pattern):
     return sorted(glob.glob(pattern))
 
 
-def new_files_from_editor(old_files, write_header=True):
+def get_files_from_editor(old_files, write_header=True):
     """ Launch editor and get new file list. """
 
     text = "\n".join(old_files)
     if write_header:
         text = HEADER + text
 
-    print("Waiting for file list to be saved... (Press Ctrl + C to abort)")
+    print("Waiting for file list to be saved... (Press Ctrl + C to abort) \n")
 
     new_text = click.edit(
         text,
@@ -144,15 +144,57 @@ def get_actions_line(old_files, new_files):
             yield FileRename(old, new)
 
 
-if __name__ == '__main__':
+@click.command()
+@click.argument('paths', nargs=-1, type=click.Path(exists=True))
+@click.option('--editor', '-e', is_flag=True,
+              help="Editor to use to edit files.")
+@click.option('--dry-run', '-n', is_flag=True,
+              help="Only show operation that will be performed.")
+@click.option('--recursive', '-R', is_flag=True,
+              help="List files recursively.")
+@click.option('--max-depth', '-d', is_flag=True,
+              help="Maximum recursion depth.")
+@click.option('--list-directories', '-D', is_flag=True,
+              help="Include directories in the files buffer.")
+@click.option('--show-header', '-H', is_flag=True,
+              help="Add a header in the files buffer.")
+@click.option('--verbose', '-v', is_flag=True,
+              help="Enable verbose output.")
+@click.version_option(version=0.7, prog_name="massren")
+def cli(
+        paths,
+        recursive,
+        max_depth,
+        dry_run,
+        editor,
+        list_directories,
+        show_header,
+        verbose,
+        ):
 
-    import sys
-    pattern = sys.argv[1]
+    # TODO: Handle the case when paths is a single directory
 
-    old_files = list_matching_files(pattern)
-    new_files = launch_text_editor(old_files)
+    # No path given, use current working directory
+    if not paths:
+        paths = list_matching_files("*")
 
-    file_actions = get_actions_line(old_files, new_files)
+    new_files = get_files_from_editor(paths)
 
+    file_actions = get_actions_line(paths, new_files)
+
+    # TODO: See what conflicts can occur
+
+    # TODO: Perform all delete operations first.
+
+    # Execute the actions now
     for act in file_actions:
-        print(act)
+
+        if verbose or dry_run:
+            print(act)
+
+        if not dry_run:
+            act.perform()
+
+
+if __name__ == '__main__':
+    cli()

@@ -63,8 +63,14 @@ class FileRename():
         return "Rename: '%s' -> '%s'" % (self.old, self.new)
 
     def perform(self):
+        new_dir = os.path.dirname(self.new)
+        if new_dir:
+            try:
+                os.makedirs(new_dir)
+            except FileExistsError:
+                pass
+
         # TODO: Handle conflicts that can occur.
-        os.makedirs(self.new)
         os.rename(self.old, self.new)
 
 

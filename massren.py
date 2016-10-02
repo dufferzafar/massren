@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
 
-"""
-rename multiple files using your text editor.
-
-Usage:
-    massren [path]
-
-Examples:
-
-    Process all the JPEGs in the specified directory:
-    % massren /path/to/photos/*.jpg
-"""
+""" rename multiple files using your text editor. """
 
 import glob
 import os
@@ -193,13 +183,13 @@ def cli(
     # TODO: Perform all delete operations first.
 
     # Execute the actions now
-    for act in file_actions:
+    for action in file_actions:
 
         if verbose or dry_run:
-            print(act)
+            print(action)
 
         if not dry_run:
-            act.perform()
+            action.perform()
 
 
 if __name__ == '__main__':

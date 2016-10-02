@@ -9,20 +9,6 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## features for v1.0
 
-* Legitimate CLI
-    - file paths
-    - recursive, depth `-R, --recursive` `-d, --max-depth`
-    - dry run `--dry-run, -n`
-    - editor `--editor, -e "subl -w"`,
-
-    - include directories `--directories, -D`
-    - show header `--header, -H`
-
-* Correct file paths from argument
-    - Multiple files `massren *.mp4`
-    - No argument: `massren`
-    - Folder: `massren /path/to/folder`
-
 * Recursive folder listsings
     - With max depth: `massren -d1R`
 
@@ -32,18 +18,15 @@ The tool works by creating a file that contains the filenames of the target dire
 
 * Re-open text file on conflicts
 
-* Configuration file?
 
 ## features (others)
 
-* Undo 
-
-* send2trash
-
-* Prompt before executing each action?
+- [ ] Undo renames
+- [ ] send2trash
+- [ ] Configuration file
+- [ ] Prompt before executing each action?
     - `rm -i` style
-
-* Unit tests?
+- [ ] Unit tests?
 
 ## Prior Art
 

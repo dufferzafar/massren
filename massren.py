@@ -12,11 +12,9 @@ Examples:
     % massren /path/to/photos/*.jpg
 """
 
-import codecs
 import glob
 import os
-import subprocess
-import tempfile
+import click
 
 HEADER = """
 Please change the filenames that need to be renamed and save the file.
@@ -81,36 +79,31 @@ def list_matching_files(pattern):
     return sorted(glob.glob(pattern))
 
 
-def launch_text_editor(files, write_header=True):
-    """ Create a text file, launch editor, get new file list. """
+def new_files_from_editor(old_files, write_header=True):
+    """ Launch editor and get new file list. """
 
-    tmp_fd, tmp_file_path = tempfile.mkstemp(prefix="massren_", text=True)
-
-    # Write file list
-    with codecs.open(tmp_file_path, "w", "utf-8") as tmp:
-        if write_header:
-            tmp.write(HEADER)
-
-        tmp.write("\n".join(files))
+    text = "\n".join(old_files)
+    if write_header:
+        text = HEADER + text
 
     print("Waiting for file list to be saved... (Press Ctrl + C to abort)")
 
-    # Launch editor
-    subprocess.call(["subl", "-w", tmp_file_path])
+    new_text = click.edit(
+        text,
+        editor="subl -w",
+        # editor="suplemon",
+        require_save=True
+    )
 
-    # Get file list
-    files = []
-    with codecs.open(tmp_file_path, "r", "utf-8") as tmp:
-        files = tmp.read().splitlines()
+    # No change
+    if new_text is None:
+        return old_files
 
     if write_header:
-        files = files[len(HEADER.splitlines()):]
+        new_text = new_text.splitlines()
+        new_files = new_text[len(HEADER.splitlines()):]
 
-    # Delete the temp file
-    os.close(tmp_fd)
-    os.remove(tmp_file_path)
-
-    return files
+    return new_files
 
 
 def get_actions_diff(old_files, new_files):

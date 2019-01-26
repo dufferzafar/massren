@@ -13,16 +13,14 @@ HEADER = """
 Please change the filenames that need to be renamed and save the file.
 Lines that are not changed will be ignored.
 
-You may delete a file by putting "//" at the beginning of the line.
-Note that this operation cannot be undone.
-
 Do NOT swap the order of lines as this is what is used to match the original
 filenames to the new ones.
 
 Also, do NOT delete lines as the rename operation will be cancelled due to a
 mismatch between the number of filenames before and after saving the file.
 
-You may test the effect of the rename operation using the --dry-run parameter.
+You may delete a file by putting "//" at the beginning of the line.
+Note that this operation cannot be undone.
 
 Caveats: massren expects filenames to be reasonably sane. Filenames that
 include newlines or non-printable characters for example will probably not

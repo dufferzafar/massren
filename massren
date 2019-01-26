@@ -160,6 +160,7 @@ def cli(paths, editor, dry_run,
         hide_header, verbose):
 
     # No path given, use current working directory
+    root = None
     if not paths:
         root = "."
 
@@ -167,7 +168,11 @@ def cli(paths, editor, dry_run,
     elif len(paths) == 1 and os.path.isdir(paths[0]):
         root = paths[0]
 
-    old_paths = list_files(root, full_paths, only_dirs, only_files, max_depth)
+    if root is None:
+        old_paths = paths
+    else:
+        old_paths = list_files(root, full_paths, only_dirs, only_files, max_depth)
+
     new_paths = get_files_from_editor(old_paths, editor, hide_header)
     actions = list(get_actions(root, old_paths, new_paths))
 

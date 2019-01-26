@@ -6,6 +6,7 @@ import glob
 import os
 import sys
 
+import walkdir
 import click
 
 HEADER = """
@@ -65,18 +66,28 @@ class FileRename():
         os.rename(self.old, self.new)
 
 
-def list_files(pattern, recursive, only_directories, max_depth):
-    """ Take a pattern from the CLI and list all file that match. """
 
 
+def list_files(root, full_paths=False, only_dirs=False, only_files=False, max_depth=0):
+    """ List all file in root directory. """
 
-    files = sorted(glob.glob(pattern))
+    walk = walkdir.filtered_walk(
+        root, depth=max_depth,
+        excluded_dirs=['__pycache__', '.git']
+    )
 
-    if only_directories:
-        files = [f for f in files if os.path.isdir(f)]
+    if only_dirs:
+        paths = walkdir.all_dir_paths(walk)
+    elif only_files:
+        paths = walkdir.file_paths(walk)
+    else:
+        paths = walkdir.all_paths(walk)
 
-    return files
+    # Paths relative to root, rather than full paths
+    relpaths = (os.path.relpath(p, root) for p in paths)
 
+    # Sort paths by name & skip the root directory itself
+    return sorted(p for p in relpaths if p != ".")
 
 def get_files_from_editor(old_files, editor, write_header=True):
     """ Launch editor and get new file list. """
@@ -104,7 +115,7 @@ def get_files_from_editor(old_files, editor, write_header=True):
     return new_files
 
 
-def get_actions_line(old_files, new_files):
+def get_actions(root, old_files, new_files):
     """
     Perform line by line comparisons to generate a list of file actions.
 
@@ -118,9 +129,9 @@ def get_actions_line(old_files, new_files):
 
     for old, new in zip(old_files, new_files):
         if new.startswith("//"):
-            yield FileDelete(old)
+            yield FileDelete(os.path.join(root, old))
         elif old != new:
-            yield FileRename(old, new)
+            yield FileRename(os.path.join(root, old), os.path.join(root, new))
 
 
 @click.command()
@@ -129,50 +140,34 @@ def get_actions_line(old_files, new_files):
               help="Editor to use to edit files.")
 @click.option('--dry-run', '-n', is_flag=True,
               help="Only show operation that will be performed.")
-@click.option('--recursive', '-R', is_flag=True,
-              help="List files recursively.")
-@click.option('--max-depth', '-d', is_flag=True,
+@click.option('--max-depth', '-d', default=0,
               help="Maximum recursion depth.")
-@click.option('--only-directories', '-D', is_flag=True,
+@click.option('--only-dirs', '-D', is_flag=True,
               help="Only list directories.")
 @click.option('--show-header', '-H', is_flag=True,
+@click.option('--only-files', '-F', is_flag=True,
               help="Add a header in the files buffer.")
+              help="Only list files.")
+@click.option('--full-paths', '-f', is_flag=True,
+              help="List full paths.")
 @click.option('--verbose', '-v', is_flag=True,
               help="Enable verbose output.")
-@click.version_option(version=0.7, prog_name="massren")
-def cli(
-    paths,
-    recursive,
-    max_depth,
-    dry_run,
-    editor,
-    only_directories,
-    show_header,
-    verbose,
-):
+@click.version_option(version=0.8, prog_name="massren")
+def cli(paths, editor, dry_run,
+        max_depth, only_dirs, only_files, full_paths,
+        hide_header, verbose):
 
     # No path given, use current working directory
     if not paths:
-        paths = list_files(
-            "*",
-            recursive,
-            only_directories,
-            max_depth=1,
-        )
+        root = "."
 
-    # paths is a single directory, assume we need its children
-    elif len(paths) == 1:
-        if os.path.isdir(paths[0]):
-            paths = list_files(
-                os.path.join(paths[0], "*"),
-                recursive,
-                only_directories,
-                max_depth,
-            )
+    # Paths is a single directory, assume we need its children
+    elif len(paths) == 1 and os.path.isdir(paths[0]):
+        root = paths[0]
 
-    new_files = get_files_from_editor(paths, editor)
-
-    file_actions = get_actions_line(paths, new_files)
+    old_paths = list_files(root, full_paths, only_dirs, only_files, max_depth)
+    new_paths = get_files_from_editor(old_paths, editor, hide_header)
+    actions = list(get_actions(root, old_paths, new_paths))
 
     # TODO: See what conflicts can occur
 

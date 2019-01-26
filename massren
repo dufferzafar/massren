@@ -89,11 +89,12 @@ def list_files(root, full_paths=False, only_dirs=False, only_files=False, max_de
     # Sort paths by name & skip the root directory itself
     return sorted(p for p in relpaths if p != ".")
 
-def get_files_from_editor(old_files, editor, write_header=True):
+
+def get_files_from_editor(old_files, editor, hide_header=False):
     """ Launch editor and get new file list. """
 
     text = "\n".join(old_files)
-    if write_header:
+    if not hide_header:
         text = HEADER + text
 
     print("Waiting for file list to be saved... (Press Ctrl + C to abort) \n")
@@ -108,9 +109,9 @@ def get_files_from_editor(old_files, editor, write_header=True):
     if new_text is None:
         return old_files
 
-    if write_header:
-        new_text = new_text.splitlines()
-        new_files = new_text[len(HEADER.splitlines()):]
+    new_files = new_text.splitlines()
+    if not hide_header:
+        new_files = new_files[len(HEADER.splitlines()):]
 
     return new_files
 
@@ -144,12 +145,12 @@ def get_actions(root, old_files, new_files):
               help="Maximum recursion depth.")
 @click.option('--only-dirs', '-D', is_flag=True,
               help="Only list directories.")
-@click.option('--show-header', '-H', is_flag=True,
 @click.option('--only-files', '-F', is_flag=True,
-              help="Add a header in the files buffer.")
               help="Only list files.")
 @click.option('--full-paths', '-f', is_flag=True,
               help="List full paths.")
+@click.option('--hide-header', '-H', is_flag=True,
+              help="Hide the header lines in the files buffer.")
 @click.option('--verbose', '-v', is_flag=True,
               help="Enable verbose output.")
 @click.version_option(version=0.8, prog_name="massren")

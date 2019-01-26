@@ -64,6 +64,9 @@ class FileRename():
         os.rename(self.old, self.new)
 
 
+def err(*msg):
+    print(*msg, file=sys.stderr)
+    sys.exit(1)
 
 
 def list_files(root, full_paths=False, only_dirs=False, only_files=False, max_depth=0):
@@ -124,8 +127,7 @@ def get_actions(root, old_files, new_files):
     """
 
     if len(old_files) != len(new_files):
-        print("Number of files were changed.")
-        sys.exit(1)
+        err("Number of files were changed.")
 
     for old, new in zip(old_files, new_files):
         if new.startswith("//"):
@@ -169,12 +171,14 @@ def cli(paths, editor, dry_run,
     new_paths = get_files_from_editor(old_paths, editor, hide_header)
     actions = list(get_actions(root, old_paths, new_paths))
 
-    # TODO: See what conflicts can occur
+    if not actions:
+        print("No file changed.")
 
     # TODO: Perform all delete operations first.
+    # TODO: See what conflicts can occur
 
     # Execute the actions now
-    for action in file_actions:
+    for action in actions:
 
         if verbose or dry_run:
             print(action)

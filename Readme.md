@@ -7,7 +7,9 @@ With massren, you just use your text editor (and all it's amazing features) for 
 
 The tool works by creating a file that contains the filenames of the target directory, and opening this file in your text editor. You can then modify the filenames as you like. Once done, save the text file and your files will be renamed.
 
-## features for v1.0
+<!-- ![Massren usage animation](https://raw.github.com/laurent22/massren/animation/animation.gif "Massren usage animation") -->
+
+## Future features
 
 * Recursive folder listsings
     - With max depth: `massren -d1R`
@@ -16,8 +18,15 @@ The tool works by creating a file that contains the filenames of the target dire
     - Everything that massren does
     - Handle Conflicts
 
+* Show Relative Path
+
+* Order files by
+    - -o
+    - recently modified `-om`
+
 * Re-open text file on conflicts
 
+* Amazing Demo GIF
 
 ## features (others)
 

@@ -65,13 +65,20 @@ class FileRename():
         os.rename(self.old, self.new)
 
 
-def list_matching_files(pattern):
+def list_files(pattern, recursive, only_directories, max_depth):
     """ Take a pattern from the CLI and list all file that match. """
 
-    return sorted(glob.glob(pattern))
 
 
-def get_files_from_editor(old_files, write_header=True):
+    files = sorted(glob.glob(pattern))
+
+    if only_directories:
+        files = [f for f in files if os.path.isdir(f)]
+
+    return files
+
+
+def get_files_from_editor(old_files, editor, write_header=True):
     """ Launch editor and get new file list. """
 
     text = "\n".join(old_files)
@@ -148,31 +155,41 @@ def get_actions_line(old_files, new_files):
               help="List files recursively.")
 @click.option('--max-depth', '-d', is_flag=True,
               help="Maximum recursion depth.")
-@click.option('--list-directories', '-D', is_flag=True,
-              help="Include directories in the files buffer.")
+@click.option('--only-directories', '-D', is_flag=True,
+              help="Only list directories.")
 @click.option('--show-header', '-H', is_flag=True,
               help="Add a header in the files buffer.")
 @click.option('--verbose', '-v', is_flag=True,
               help="Enable verbose output.")
 @click.version_option(version=0.7, prog_name="massren")
 def cli(
-        paths,
-        recursive,
-        max_depth,
-        dry_run,
-        editor,
-        list_directories,
-        show_header,
-        verbose,
-        ):
+    paths,
+    recursive,
+    max_depth,
+    dry_run,
+    only_directories,
+    show_header,
+    verbose,
+):
 
     # No path given, use current working directory
     if not paths:
-        paths = list_matching_files("*")
+        paths = list_files(
+            "*",
+            recursive,
+            only_directories,
+            max_depth=1,
+        )
+
     # paths is a single directory, assume we need its children
     elif len(paths) == 1:
         if os.path.isdir(paths[0]):
-            paths = list_matching_files(os.path.join(paths[0], "*"))
+            paths = list_files(
+                os.path.join(paths[0], "*"),
+                recursive,
+                only_directories,
+                max_depth,
+            )
 
     new_files = get_files_from_editor(paths)
 

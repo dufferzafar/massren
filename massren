@@ -102,6 +102,7 @@ def get_files_from_editor(old_files, editor, hide_header=False):
     new_text = click.edit(
         text,
         editor=editor,
+        extension=".cpp",
         require_save=True
     )
 

@@ -104,27 +104,6 @@ def get_files_from_editor(old_files, editor, write_header=True):
     return new_files
 
 
-def get_actions_diff(old_files, new_files):
-    """
-    Use difflib to generate a list of file actions.
-
-    This method will NOT detect changes correctly in all cases,
-    but it allows you to delete lines to mark files as deleted.
-    """
-
-    import difflib
-
-    d = difflib.SequenceMatcher(None, old_files, new_files)
-
-    for tag, alo, ahi, blo, bhi in d.get_opcodes():
-        if tag == 'replace':
-            for old, new in zip(old_files[alo:ahi], new_files[blo:bhi]):
-                yield FileRename(old, new)
-        elif tag == 'delete':
-            for old in old_files[alo:ahi]:
-                yield FileDelete(old)
-
-
 def get_actions_line(old_files, new_files):
     """
     Perform line by line comparisons to generate a list of file actions.

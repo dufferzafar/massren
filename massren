@@ -89,8 +89,7 @@ def get_files_from_editor(old_files, editor, write_header=True):
 
     new_text = click.edit(
         text,
-        editor="subl -w",
-        # editor="suplemon",
+        editor=editor,
         require_save=True
     )
 
@@ -147,7 +146,7 @@ def get_actions_line(old_files, new_files):
 
 @click.command()
 @click.argument('paths', nargs=-1, type=click.Path(exists=True))
-@click.option('--editor', '-e', is_flag=True,
+@click.option('--editor', '-e', default="code-insiders -w",
               help="Editor to use to edit files.")
 @click.option('--dry-run', '-n', is_flag=True,
               help="Only show operation that will be performed.")
@@ -167,6 +166,7 @@ def cli(
     recursive,
     max_depth,
     dry_run,
+    editor,
     only_directories,
     show_header,
     verbose,
@@ -191,7 +191,7 @@ def cli(
                 max_depth,
             )
 
-    new_files = get_files_from_editor(paths)
+    new_files = get_files_from_editor(paths, editor)
 
     file_actions = get_actions_line(paths, new_files)
 

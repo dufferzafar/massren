@@ -4,6 +4,7 @@
 
 import glob
 import os
+import shutil
 import sys
 
 import walkdir
@@ -25,7 +26,7 @@ Note that this operation cannot be undone.
 Caveats: massren expects filenames to be reasonably sane. Filenames that
 include newlines or non-printable characters for example will probably not
 work.
-"""
+""" 
 HEADER = "\n".join(["// " + line for line in HEADER.splitlines()]) + "\n\n"
 
 
@@ -61,7 +62,7 @@ class FileRename():
                 pass
 
         # TODO: Handle conflicts that can occur.
-        os.rename(self.old, self.new)
+        shutil.move(self.old, self.new)
 
 
 def err(*msg):
@@ -171,7 +172,8 @@ def cli(paths, editor, dry_run,
     if root is None:
         old_paths = paths
     else:
-        old_paths = list_files(root, full_paths, only_dirs, only_files, max_depth)
+        old_paths = list_files(
+            root, full_paths, only_dirs, only_files, max_depth)
 
     new_paths = get_files_from_editor(old_paths, editor, hide_header)
     actions = list(get_actions(root, old_paths, new_paths))

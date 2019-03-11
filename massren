@@ -6,6 +6,7 @@ import glob
 import os
 import shutil
 import sys
+from tqdm import tqdm
 
 import walkdir
 import click
@@ -185,7 +186,7 @@ def cli(paths, editor, dry_run,
     # TODO: See what conflicts can occur
 
     # Execute the actions now
-    for action in actions:
+    for action in tqdm(actions):
 
         if verbose or dry_run:
             print(action)
